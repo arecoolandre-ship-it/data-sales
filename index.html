@@ -71,8 +71,8 @@ code{background:var(--pri-s);padding:1px 6px;border-radius:6px;font-size:13px}
 </div>
 <script>
 /* ===== PENGATURAN: isi dua link CSV dari Google Sheets (File > Bagikan > Publikasikan ke web) ===== */
-const MASTER_URL = "";   // link CSV untuk sheet MASTER
-const DATA_URL   = "";   // link CSV untuk sheet DATA
+const MASTER_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQh2Pzo2aR-QS6M3zXKP_FrKzMcu1HQ0aFqcZ5KWFtRpZ-2crpZMumvbSaJpTQSTIBtbuiiu_gS-1T/pub?gid=0&single=true&output=csv";   // link CSV untuk sheet MASTER
+const DATA_URL   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQh2Pzo2aR-QS6M3zXKP_FrKzMcu1HQ0aFqcZ5KWFtRpZ-2crpZMumvbSaJpTQSTIBtbuiiu_gS-1T/pub?gid=1824438478&single=true&output=csv";   // link CSV untuk sheet DATA
 const REFRESH_SECONDS = 120;
 /* ================================================================================================= */
 
@@ -138,7 +138,7 @@ async function get(url){
   return t;
 }
 async function load(){
-  if(!https://docs.google.com/spreadsheets/d/e/2PACX-1vRQh2Pzo2aR-QS6M3zXKP_FrKzMcu1HQ0aFqcZ5KWFtRpZ-2crpZMumvbSaJpTQSTIBtbuiiu_gS-1T/pub?gid=0&single=true&output=csv||!https://docs.google.com/spreadsheets/d/e/2PACX-1vRQh2Pzo2aR-QS6M3zXKP_FrKzMcu1HQ0aFqcZ5KWFtRpZ-2crpZMumvbSaJpTQSTIBtbuiiu_gS-1T/pub?gid=1824438478&single=true&output=csv){setup();return}
+  if(!MASTER_URL||!DATA_URL){setup();return}
   try{
     const [m,d]=await Promise.all([get(MASTER_URL),get(DATA_URL)]);
     if(m+d===S.raw&&S.ok){stat("ok");return}
