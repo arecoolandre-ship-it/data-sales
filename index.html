@@ -24,7 +24,7 @@ h1{font-size:clamp(24px,4.5vw,34px);font-weight:800;letter-spacing:-.02em;margin
 .stats{display:flex;flex-wrap:wrap;gap:10px}.stat{background:rgba(255,255,255,.16);border-radius:14px;padding:8px 14px}.stat b{display:block;font-size:18px}.stat span{font-size:12.5px;opacity:.9}
 .ctl{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end;margin:18px 0 6px}
 .fld{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--soft)}
-input[type=date],input[type=search]{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-height:40px;color:var(--ink)}
+select,input[type=date],input[type=search]{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-height:40px;color:var(--ink)}
 .btn{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 14px;min-height:40px;cursor:pointer;font-weight:600}.btn:hover{border-color:var(--pri)}
 .btn.on{background:var(--pri);border-color:var(--pri);color:#fff}
 .tabs{display:flex;gap:8px;overflow-x:auto;padding:10px 0 6px;margin-top:6px;scrollbar-width:thin}
@@ -60,6 +60,7 @@ code{background:var(--pri-s);padding:1px 6px;border-radius:6px;font-size:13px}
     <div class="ctl">
       <label class="fld">Dari tanggal<input type="date" id="dFrom"></label>
       <label class="fld">Sampai tanggal<input type="date" id="dTo"></label>
+      <label class="fld">Bulan<select id="mSel" aria-label="Pilih bulan"></select></label>
       <button class="btn" id="pLast" type="button">Tanggal terbaru</button>
       <button class="btn" id="p7" type="button">7 hari terakhir</button>
       <button class="btn" id="pAll" type="button">Semua tanggal</button>
@@ -80,6 +81,9 @@ const $=id=>document.getElementById(id),pad=n=>String(n).padStart(2,"0");
 const nfI=new Intl.NumberFormat("id-ID",{maximumFractionDigits:0}),nfQ=new Intl.NumberFormat("id-ID",{maximumFractionDigits:2});
 const rp=n=>"Rp "+nfI.format(Math.round(n)),esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fd=i=>i.split("-").reverse().join("/"),COL=["#6366f1","#f97316","#10b981","#ec4899","#0ea5e9","#f59e0b"];
+const BLN=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+const monthLabel=k=>BLN[+k.slice(5,7)-1]+" "+k.slice(0,4);
+function months(){const m={};S.lives.forEach(e=>{const k=e.to.slice(0,7),r=m[k]||(m[k]={a:e.to,b:e.to});if(e.to<r.a)r.a=e.to;if(e.to>r.b)r.b=e.to});return m}
 const S={groups:[],lives:[],from:null,to:null,touched:false,tab:"all",sort:"a",q:"",open:{},raw:"",sci:0,ok:false};
 const bad=m=>Object.assign(new Error(m),{user:true});
 
@@ -187,6 +191,9 @@ function render(){
   if(!S.ok)return;
   const v=view(),tot=S.groups.map((g,i)=>({g,i,...sum(g.items,v.vals)})),A=tot.reduce((t,x)=>t+x.a,0),Q=tot.reduce((t,x)=>t+x.q,0),N=tot.reduce((t,x)=>t+x.n,0),all=S.groups.reduce((t,g)=>t+g.items.length,0);
   $("dFrom").min=$("dTo").min=v.lo;$("dFrom").max=$("dTo").max=v.hi;$("dFrom").value=v.a;$("dTo").value=v.b;
+  const M=months(),keys=Object.keys(M).sort().reverse(),sig=keys.join(",");
+  if(S.msig!==sig){S.msig=sig;$("mSel").innerHTML='<option value="__all">Semua bulan</option>'+keys.map(k=>'<option value="'+k+'">'+monthLabel(k)+"</option>").join("")+'<option value="__x" hidden>Rentang kustom</option>'}
+  $("mSel").value=(v.a===v.lo&&v.b===v.hi)?"__all":(keys.find(k=>M[k].a===v.a&&M[k].b===v.b)||"__x");
   $("pLast").classList.toggle("on",v.a===v.hi&&v.b===v.hi);$("pAll").classList.toggle("on",v.a===v.lo&&v.b===v.hi);
   $("notes").innerHTML=S.sci?'<div class="note">Ada '+S.sci+" angka di spreadsheet yang tertulis dalam format ilmiah (contoh 1.23E+05), sehingga bisa terbulatkan. Ubah format kolom Sales Qty dan Sales Amount menjadi Angka biasa agar akurat.</div>":"";
   $("hL").textContent="Total penjualan "+(v.a===v.b?"tanggal "+fd(v.a):fd(v.a)+" sampai "+fd(v.b));
@@ -224,6 +231,7 @@ document.addEventListener("toggle",e=>{
 },true);
 const setRange=(a,b,t)=>{S.from=a;S.to=b;S.touched=t;render()};
 $("dFrom").onchange=$("dTo").onchange=()=>setRange($("dFrom").value||null,$("dTo").value||null,true);
+$("mSel").onchange=()=>{const k=$("mSel").value;if(k==="__all")return setRange(null,null,false);const r=months()[k];if(r)setRange(r.a,r.b,true)};
 $("pLast").onclick=()=>{const h=S.lives[S.lives.length-1].to;setRange(h,h,true)};
 $("pAll").onclick=()=>setRange(null,null,false);
 $("p7").onclick=()=>{const h=S.lives[S.lives.length-1].to,d=new Date(h+"T00:00:00Z");d.setUTCDate(d.getUTCDate()-6);const a=d.toISOString().slice(0,10);setRange(a<S.lives[0].to?S.lives[0].to:a,h,true)};
